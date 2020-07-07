@@ -20,7 +20,7 @@ def usage():
     kafka-cli <bootstrap-server> <topic> <partition> <begin-time> <limit: default=1> -- query message from time
     kafka-cli <bootstrap-server> <topic> <key-value-type> send <key> <value> -- send message
 
-    key-value-type: 0 none, 1 string, 2 int,  key-type * 10 + value-type (11 string key and value, 1 only string value, 20 only int key)
+    key-value-type: 0 none, 1 string, 2 int, 3 long,  key-type * 10 + value-type (11 string key and value, 1 only string value, 20 only int key)
     
 examples:
     $>kafka-cli 192.168.20.211:9092 test01               
@@ -73,6 +73,9 @@ def query_time(bootstrap_server, topic, partition, begin_time, number=1):
 def int_encode(n):
     return struct.pack("i", n)
 
+def long_encode(n):
+    return struct.pack("l", n)
+
 def send_message(bootstrap_server, topic, key_type,  key, val_type,  value):
     # print("send message, topic: {}, key: {}, value: {}".format(topic, key, value))
     key_s = None
@@ -84,9 +87,15 @@ def send_message(bootstrap_server, topic, key_type,  key, val_type,  value):
     if key_type == 2:
         key_s = int_encode
         key = int(key)
+    if key_type == 3:
+        key_s = long_encode
+        key = long(key)
     if val_type == 2:
         val_s = int_encode
         value = int(value)
+    if val_type == 3:
+        val_s = long_encode
+        value = long(value)
     from kafka import KafkaProducer
     producer = KafkaProducer(bootstrap_servers=bootstrap_server, key_serializer=key_s, value_serializer=val_s)
     f = producer.send(topic, value, key)
